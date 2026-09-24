@@ -1,4 +1,4 @@
-# GD Runtime — Phase 0 + Phase 1 + Phase 2 + Phase 3 + Phase 4 + Phase 5 + Phase 6 + Tier 1 + Tier 2 + Tier 3 + Movement Modifiers + Spawner Primitive (visual juice + animation + theme packs + composable movement + runtime spawning)
+# GD Runtime — Phase 0 + Tier 1 + Tier 2 + Tier 3 + Movement Modifiers + Spawner Primitive (visual juice + animation + theme packs + composable movement + runtime spawning)
 
 A Phaser 3 + TypeScript runtime that plays a game by **interpreting a JSON
 GameSpec**, not by running generated code; a standalone three-gate validator
