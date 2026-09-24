@@ -1,0 +1,104 @@
+{
+  "meta": { "title": "Neon Onslaught", "width": 800, "height": 600 },
+  "movementType": "topdown_8dir",
+  "theme": "space",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#0a0a14",
+    "bounds": { "width": 1600, "height": 1600 },
+    "groundTile": "tile_space",
+    "walls": [
+      { "x": 0, "y": 0, "width": 1600, "height": 32 },
+      { "x": 0, "y": 1568, "width": 1600, "height": 32 },
+      { "x": 0, "y": 0, "width": 32, "height": 1600 },
+      { "x": 1568, "y": 0, "width": 32, "height": 1600 }
+    ]
+  },
+  "player": {
+    "start": { "x": 800, "y": 800 },
+    "sprite": "player",
+    "health": 100,
+    "speed": 200,
+    "attack": {
+      "type": "ranged",
+      "damage": 5,
+      "range": 350,
+      "cooldown": 180,
+      "projectileSpeed": 420,
+      "projectileSprite": "projectile"
+    }
+  },
+  "entities": [
+    {
+      "id": "turret_north",
+      "type": "enemy",
+      "sprite": "enemy_shooter",
+      "position": { "x": 800, "y": 250 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 500, "fireRate": 900, "projectileSpeed": 260, "damage": 4 },
+      "health": 12,
+      "damage": 0,
+      "scoreValue": 30
+    },
+    {
+      "id": "turret_south",
+      "type": "enemy",
+      "sprite": "enemy_shooter",
+      "position": { "x": 800, "y": 1350 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 500, "fireRate": 900, "projectileSpeed": 260, "damage": 4 },
+      "health": 12,
+      "damage": 0,
+      "scoreValue": 30
+    },
+    {
+      "id": "turret_east",
+      "type": "enemy",
+      "sprite": "enemy_shooter",
+      "position": { "x": 1350, "y": 800 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 500, "fireRate": 1100, "projectileSpeed": 240, "damage": 4 },
+      "health": 12,
+      "damage": 0,
+      "scoreValue": 30
+    },
+    {
+      "id": "turret_west",
+      "type": "enemy",
+      "sprite": "enemy_shooter",
+      "position": { "x": 250, "y": 800 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 500, "fireRate": 1100, "projectileSpeed": 240, "damage": 4 },
+      "health": 12,
+      "damage": 0,
+      "scoreValue": 30
+    },
+    {
+      "id": "chaser_1",
+      "type": "enemy",
+      "sprite": "enemy_chase",
+      "position": { "x": 500, "y": 500 },
+      "behavior": "chase",
+      "behaviorParams": { "speed": 130, "detectRadius": 400, "loseRadius": 600 },
+      "health": 8,
+      "damage": 5,
+      "scoreValue": 20
+    },
+    {
+      "id": "chaser_2",
+      "type": "enemy",
+      "sprite": "enemy_chase",
+      "position": { "x": 1100, "y": 1100 },
+      "behavior": "chase",
+      "behaviorParams": { "speed": 130, "detectRadius": 400, "loseRadius": 600 },
+      "health": 8,
+      "damage": 5,
+      "scoreValue": 20
+    },
+    { "id": "health_1", "type": "pickup", "sprite": "pickup_health", "position": { "x": 750, "y": 700 }, "pickupType": "health", "value": 20 },
+    { "id": "coin_1", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 600, "y": 950 }, "pickupType": "coin", "value": 10 },
+    { "id": "coin_2", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 1000, "y": 650 }, "pickupType": "coin", "value": 10 }
+  ],
+  "winCondition": { "type": "defeat_all_enemies" },
+  "hud": { "showHealth": true, "showScore": true }
+}

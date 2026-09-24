@@ -1,0 +1,53 @@
+{
+  "meta": { "title": "Flappy Delve", "width": 480, "height": 640 },
+  "movementType": "shmup_freeaxis",
+  "camera": "auto_scroll_vertical",
+  "theme": "dungeon",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#12382f",
+    "bounds": { "width": 480, "height": 3200 },
+    "groundTile": "tile_ground"
+  },
+  "player": {
+    "start": { "x": 240, "y": 100 },
+    "sprite": "player",
+    "health": 1,
+    "speed": 200,
+    "movementModifiers": {
+      "axisConstraint": "vertical",
+      "gravity": { "enabled": true, "magnitude": 800 },
+      "inputMode": "impulse",
+      "impulseForce": 400
+    }
+  },
+  "entities": [
+    {
+      "id": "delve_rules",
+      "type": "trigger",
+      "sprite": "trigger_zone",
+      "message": "Tap Up/W/Space to flap through the gaps. One touch and it's over!",
+      "behavior": "stationary",
+      "position": { "x": 240, "y": 60 },
+      "triggerType": "message",
+      "size": { "width": 440, "height": 100 }
+    },
+    { "id": "gap1_left", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 100, "y": 320 }, "triggerType": "lose", "size": { "width": 200, "height": 32 } },
+    { "id": "gap1_right", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 380, "y": 320 }, "triggerType": "lose", "size": { "width": 200, "height": 32 } },
+    { "id": "gap2_left", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 60, "y": 700 }, "triggerType": "lose", "size": { "width": 120, "height": 32 } },
+    { "id": "gap2_right", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 340, "y": 700 }, "triggerType": "lose", "size": { "width": 280, "height": 32 } },
+    { "id": "gap3_left", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 140, "y": 1080 }, "triggerType": "lose", "size": { "width": 280, "height": 32 } },
+    { "id": "gap3_right", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 420, "y": 1080 }, "triggerType": "lose", "size": { "width": 120, "height": 32 } },
+    { "id": "gap4_left", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 80, "y": 1460 }, "triggerType": "lose", "size": { "width": 160, "height": 32 } },
+    { "id": "gap4_right", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 360, "y": 1460 }, "triggerType": "lose", "size": { "width": 240, "height": 32 } },
+    { "id": "gap5_left", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 160, "y": 1840 }, "triggerType": "lose", "size": { "width": 320, "height": 32 } },
+    { "id": "gap5_right", "type": "trigger", "sprite": "trigger_zone", "behavior": "stationary", "position": { "x": 440, "y": 1840 }, "triggerType": "lose", "size": { "width": 80, "height": 32 } },
+    { "id": "coin_1", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 240, "y": 320 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_2", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 240, "y": 700 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_3", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 240, "y": 1080 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_4", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 240, "y": 1460 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_5", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 240, "y": 1840 }, "pickupType": "coin", "value": 5 }
+  ],
+  "winCondition": { "type": "survive_duration", "threshold": 40 },
+  "hud": { "showHealth": true, "showScore": true, "showTimer": true }
+}

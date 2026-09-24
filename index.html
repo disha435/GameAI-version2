@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GD Runtime</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #0b0b10;
+        height: 100%;
+        font-family: system-ui, -apple-system, sans-serif;
+        color: #e8e8ef;
+      }
+      body {
+        overflow: hidden;
+      }
+
+      /* ---------- shared ---------- */
+      button {
+        font: inherit;
+      }
+      a {
+        color: #9dc4ff;
+      }
+      [hidden] {
+        display: none !important;
+      }
+
+      /* ---------- landing view ---------- */
+      #landing-view {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        box-sizing: border-box;
+        overflow: hidden;
+      }
+
+      /* Ambient shapes drawn from the same palette/vocabulary the actual
+         game renders with (triangle player, circle coin, diamond pickup,
+         rounded-square enemy) — a little life on a page that used to be
+         static text on a plain background, without competing with it:
+         low opacity, behind the card, no pointer events. */
+      #landing-decor {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 0;
+      }
+      .decor-shape {
+        position: absolute;
+        opacity: 0.22;
+        animation: decor-float ease-in-out infinite;
+      }
+      .decor-triangle {
+        width: 0;
+        height: 0;
+        border-left: 15px solid transparent;
+        border-right: 15px solid transparent;
+        border-bottom: 26px solid #4f8cff;
+      }
+      .decor-circle {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #ffd93d;
+      }
+      .decor-square {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        background: #ff6b6b;
+      }
+      .decor-diamond {
+        width: 18px;
+        height: 18px;
+        background: #7ee787;
+        border-radius: 4px;
+        transform: rotate(45deg);
+      }
+      @keyframes decor-float {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-22px) rotate(10deg); }
+      }
+      .decor-diamond { animation-name: decor-float-diamond; }
+      @keyframes decor-float-diamond {
+        0%, 100% { transform: translateY(0) rotate(45deg); }
+        50% { transform: translateY(-22px) rotate(55deg); }
+      }
+
+      #prompt-card {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 560px;
+        background: #15151d;
+        border: 1px solid #2a2a38;
+        border-radius: 12px;
+        padding: 28px 28px 22px;
+        box-sizing: border-box;
+      }
+      #prompt-card h1 {
+        font-size: 22px;
+        margin: 0 0 6px;
+      }
+      #prompt-card p {
+        margin: 0 0 16px;
+        color: #9a9aae;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      #prompt-input {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        box-sizing: border-box;
+        background: #0e0e14;
+        color: #e8e8ef;
+        border: 1px solid #2a2a38;
+        border-radius: 8px;
+        padding: 12px;
+        font: inherit;
+        font-size: 14px;
+      }
+      #prompt-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      #prompt-actions button {
+        font-size: 14px;
+        padding: 9px 16px;
+        border-radius: 7px;
+        border: 1px solid #2a2a38;
+        cursor: pointer;
+      }
+      #example-btn {
+        background: transparent;
+        color: #e8e8ef;
+      }
+      #generate-btn {
+        background: #4f8cff;
+        color: #fff;
+        border-color: #4f8cff;
+        font-weight: 600;
+      }
+      #generate-btn:disabled,
+      #example-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #prompt-status {
+        margin-top: 14px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      #prompt-status.error {
+        color: #ff6b6b;
+        white-space: pre-wrap;
+      }
+      #prompt-status.notice {
+        color: #ffd93d;
+      }
+      #prompt-status.loading {
+        color: #9a9aae;
+      }
+      #prompt-retry-btn {
+        margin-top: 8px;
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: 1px solid #2a2a38;
+        background: transparent;
+        color: #e8e8ef;
+        cursor: pointer;
+      }
+
+      /* ---------- generation progress ring ---------- */
+      /* Replaces the button row while generating — a round, filling
+         indicator instead of a static "Generating…" label. There's no real
+         step-by-step progress to report (a single opaque LLM call, see the
+         honesty note in main.ts), so the fill is a deliberately-honest
+         approximation: fast at first, slowing as it nears full, and it
+         never actually reaches 100% on its own — only the real response
+         arriving does that, at which point it completes and the game loads.
+         Never a fake promise of an exact finish time, just "still working,
+         getting closer." */
+      #generate-progress {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        margin-top: 18px;
+        padding-top: 4px;
+      }
+      #generate-progress.active {
+        display: flex;
+      }
+      #progress-ring {
+        width: 84px;
+        height: 84px;
+        transform: rotate(-90deg);
+      }
+      #progress-ring .ring-track {
+        fill: none;
+        stroke: #2a2a38;
+        stroke-width: 7;
+      }
+      #progress-ring .ring-fill {
+        fill: none;
+        stroke: #4bd67a;
+        stroke-width: 7;
+        stroke-linecap: round;
+        stroke-dasharray: 213.63;
+        stroke-dashoffset: 213.63;
+        transition: stroke-dashoffset 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      #generate-progress.done #progress-ring .ring-fill {
+        stroke: #7ee787;
+        transition: stroke-dashoffset 0.4s ease-out, stroke 0.2s ease-out;
+      }
+      #progress-label {
+        font-size: 12.5px;
+        color: #9a9aae;
+        text-align: center;
+        max-width: 320px;
+        line-height: 1.5;
+      }
+
+      /* ---------- play view: two-column app shell ---------- */
+      #play-view {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: row;
+      }
+      #play-main {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      #game-header {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+        border-bottom: 1px solid #2a2a38;
+        gap: 12px;
+      }
+      #game-title {
+        font-size: 14px;
+        font-weight: 600;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #new-game-link {
+        flex: 0 0 auto;
+        font-size: 13px;
+        text-decoration: none;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #2a2a38;
+        white-space: nowrap;
+      }
+      #history-toggle-btn {
+        display: none; /* only shown on narrow layouts, see media query below */
+        flex: 0 0 auto;
+        font-size: 13px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #2a2a38;
+        background: transparent;
+        color: #e8e8ef;
+        cursor: pointer;
+      }
+
+      #generation-banner {
+        flex: 0 0 auto;
+        margin: 10px 16px 0;
+        padding: 8px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        line-height: 1.5;
+        background: #15151d;
+        border: 1px solid #2a2a38;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      #generation-banner.loading {
+        color: #9a9aae;
+      }
+      #generation-banner.notice {
+        color: #ffd93d;
+        border-color: #6b5d1f;
+      }
+      #generation-banner.ok {
+        color: #7ee787;
+      }
+      #generation-banner-close {
+        flex: 0 0 auto;
+        background: transparent;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 15px;
+        line-height: 1;
+        padding: 2px 4px;
+      }
+
+      #game-stage {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+        padding: 12px;
+        box-sizing: border-box;
+      }
+      #canvas-wrap {
+        position: relative;
+        line-height: 0;
+      }
+      #app canvas {
+        display: block;
+      }
+      #hud {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        color: #fff;
+        font-family: monospace;
+        font-size: 14px;
+        line-height: 1.4; /* #canvas-wrap sets line-height:0 to shrink-wrap the canvas; without resetting it here, this multi-line pre-wrapped text collapses onto itself */
+        pointer-events: none;
+        text-shadow: 1px 1px 2px #000;
+        white-space: pre;
+        z-index: 10;
+      }
+      #game-loading {
+        color: #9a9aae;
+        font-size: 14px;
+      }
+      #game-fatal-error {
+        color: #ff6b6b;
+        font-family: monospace;
+        padding: 16px;
+        white-space: pre-wrap;
+        max-width: 640px;
+      }
+
+      /* ---------- pre-game lobby: controls/objective, gated by Play ---------- */
+      #game-lobby {
+        width: 100%;
+        max-width: 420px;
+        background: #15151d;
+        border: 1px solid #2a2a38;
+        border-radius: 12px;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      #lobby-title {
+        font-size: 18px;
+        margin: 0 0 4px;
+      }
+      #lobby-objective {
+        color: #ffd93d;
+        font-size: 14px;
+        margin: 0 0 16px;
+      }
+      #lobby-controls-label {
+        color: #9a9aae;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 0 0 6px;
+      }
+      #lobby-controls {
+        list-style: none;
+        margin: 0 0 20px;
+        padding: 0;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+      #lobby-play-btn {
+        width: 100%;
+        font-size: 15px;
+        font-weight: 600;
+        padding: 11px 16px;
+        border-radius: 8px;
+        border: 1px solid #4f8cff;
+        background: #4f8cff;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      /* ---------- end-of-game overlay, layered on top of the canvas ---------- */
+      #game-end-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #05050acc;
+        z-index: 20;
+      }
+      #end-card {
+        width: 100%;
+        max-width: 320px;
+        margin: 16px;
+        background: #15151d;
+        border: 1px solid #2a2a38;
+        border-radius: 12px;
+        padding: 22px;
+        box-sizing: border-box;
+        text-align: center;
+      }
+      #end-headline {
+        font-size: 20px;
+        line-height: 1.3;
+        margin: 0 0 10px;
+      }
+      #end-headline.win {
+        color: #7ee787;
+      }
+      #end-headline.lose {
+        color: #ff6b6b;
+      }
+      #end-objective-recap {
+        color: #9a9aae;
+        font-size: 13px;
+        margin: 0 0 18px;
+      }
+      #end-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      #end-play-again-btn,
+      #end-new-game-link {
+        font-size: 14px;
+        font-weight: 600;
+        padding: 9px 16px;
+        border-radius: 7px;
+        border: 1px solid #2a2a38;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+      }
+      #end-play-again-btn {
+        border-color: #4f8cff;
+        background: #4f8cff;
+        color: #fff;
+      }
+      #end-new-game-link {
+        background: transparent;
+        color: #e8e8ef;
+      }
+
+      #edit-bar-wrap {
+        flex: 0 0 auto;
+        padding: 10px 16px 14px;
+      }
+      #edit-bar {
+        display: flex;
+        gap: 8px;
+      }
+      #edit-input {
+        flex: 1;
+        min-width: 0;
+        background: #15151d;
+        color: #e8e8ef;
+        border: 1px solid #2a2a38;
+        border-radius: 7px;
+        padding: 9px 12px;
+        font-size: 14px;
+      }
+      #edit-btn {
+        font-size: 14px;
+        padding: 9px 16px;
+        border-radius: 7px;
+        border: 1px solid #4f8cff;
+        background: #4f8cff;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      #edit-btn:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+      #edit-status {
+        margin-top: 8px;
+        font-size: 13px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      #edit-status.ok {
+        color: #7ee787;
+      }
+      #edit-status.error {
+        color: #ff6b6b;
+      }
+      #edit-retry-btn {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid #2a2a38;
+        background: transparent;
+        color: #e8e8ef;
+        cursor: pointer;
+      }
+
+      /* ---------- history sidebar ---------- */
+      #history-sidebar {
+        flex: 0 0 320px;
+        border-left: 1px solid #2a2a38;
+        background: #101017;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        box-sizing: border-box;
+      }
+      #history-sidebar h2 {
+        font-size: 14px;
+        margin: 0;
+        padding: 14px 16px;
+        border-bottom: 1px solid #2a2a38;
+      }
+      #version-list {
+        list-style: none;
+        margin: 0;
+        padding: 12px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+      .version-row {
+        border: 1px solid #2a2a38;
+        border-radius: 8px;
+        padding: 8px 10px;
+        font-size: 13px;
+      }
+      .version-row.is-current {
+        border-color: #4f8cff;
+      }
+      .version-row-headline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+      .version-row-badge {
+        font-size: 11px;
+        font-weight: 600;
+        padding: 1px 7px;
+        border-radius: 999px;
+        border: 1px solid #2a2a38;
+        color: #9a9aae;
+      }
+      .version-row-badge.deterministic {
+        color: #7ee787;
+        border-color: #2b5c3a;
+      }
+      .version-row-badge.llm_patch {
+        color: #c8a8ff;
+        border-color: #4a3a6e;
+      }
+      .version-row-badge.fallback {
+        color: #ffd93d;
+        border-color: #6b5d1f;
+      }
+      .version-row-meta {
+        color: #9a9aae;
+        font-size: 11px;
+        margin-bottom: 6px;
+      }
+      .version-row-prompt {
+        font-size: 12px;
+        margin-bottom: 6px;
+        word-break: break-word;
+        color: #cfcfe0;
+      }
+      .version-row-actions {
+        display: flex;
+        gap: 8px;
+      }
+      .version-row-actions button {
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 6px;
+        border: 1px solid #2a2a38;
+        background: transparent;
+        color: #e8e8ef;
+        cursor: pointer;
+      }
+      .version-row-actions button:disabled {
+        opacity: 0.5;
+        cursor: default;
+      }
+
+      /* ---------- responsive: stack the sidebar below a certain width ---------- */
+      @media (max-width: 900px) {
+        #play-view {
+          flex-direction: column;
+        }
+        #history-toggle-btn {
+          display: inline-block;
+        }
+        #history-sidebar {
+          flex: 0 0 auto;
+          max-height: 40vh;
+          border-left: none;
+          border-top: 1px solid #2a2a38;
+        }
+        #history-sidebar[hidden] {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- / — describe a game, nothing exists yet -->
+    <div id="landing-view">
+      <div id="landing-decor" aria-hidden="true">
+        <span class="decor-shape decor-triangle" style="top: 10%; left: 8%; animation-duration: 7.5s; animation-delay: 0s;"></span>
+        <span class="decor-shape decor-circle" style="top: 76%; left: 12%; animation-duration: 6.2s; animation-delay: 0.6s;"></span>
+        <span class="decor-shape decor-diamond" style="top: 18%; left: 88%; animation-duration: 8.1s; animation-delay: 1.1s;"></span>
+        <span class="decor-shape decor-square" style="top: 82%; left: 86%; animation-duration: 6.8s; animation-delay: 0.3s;"></span>
+        <span class="decor-shape decor-circle" style="top: 6%; left: 46%; animation-duration: 7s; animation-delay: 1.6s;"></span>
+        <span class="decor-shape decor-triangle" style="top: 88%; left: 52%; animation-duration: 8.6s; animation-delay: 0.9s;"></span>
+        <span class="decor-shape decor-diamond" style="top: 44%; left: 4%; animation-duration: 7.3s; animation-delay: 2s;"></span>
+        <span class="decor-shape decor-square" style="top: 42%; left: 93%; animation-duration: 6.5s; animation-delay: 1.3s;"></span>
+      </div>
+      <div id="prompt-card">
+        <h1>What game do you want to play?</h1>
+        <p>Describe it in a sentence or two — a genre, a character, a goal. It gets turned into a real, playable level.</p>
+        <textarea id="prompt-input" placeholder="e.g. a tiny wizard collecting magic crystals while avoiding goblins, with a dragon boss at the end"></textarea>
+        <div id="prompt-status" hidden></div>
+        <button id="prompt-retry-btn" type="button" hidden>Retry</button>
+        <div id="prompt-actions">
+          <button id="example-btn" type="button">Use example</button>
+          <button id="generate-btn" type="button">Generate Game</button>
+        </div>
+        <div id="generate-progress">
+          <svg id="progress-ring" viewBox="0 0 80 80">
+            <circle class="ring-track" cx="40" cy="40" r="34"></circle>
+            <circle class="ring-fill" cx="40" cy="40" r="34"></circle>
+          </svg>
+          <div id="progress-label">Building your game…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- /games/:id — play + edit + history, the actual product view -->
+    <div id="play-view" hidden>
+      <div id="play-main">
+        <div id="game-header">
+          <span id="game-title"></span>
+          <div style="display: flex; gap: 8px; align-items: center">
+            <button id="history-toggle-btn" type="button">History</button>
+            <a id="new-game-link" href="/">+ New Game</a>
+          </div>
+        </div>
+        <div id="generation-banner" hidden>
+          <span id="generation-banner-text"></span>
+          <button id="generation-banner-close" type="button" aria-label="Dismiss" hidden>&times;</button>
+        </div>
+        <div id="game-stage">
+          <div id="game-loading" hidden>Loading…</div>
+          <div id="game-fatal-error" hidden></div>
+          <div id="game-lobby" hidden>
+            <h2 id="lobby-title"></h2>
+            <p id="lobby-objective"></p>
+            <p id="lobby-controls-label">Controls</p>
+            <ul id="lobby-controls"></ul>
+            <button id="lobby-play-btn" type="button">Play</button>
+          </div>
+          <div id="canvas-wrap" hidden>
+            <div id="app"></div>
+            <div id="hud"></div>
+            <div id="game-end-overlay" hidden>
+              <div id="end-card">
+                <h2 id="end-headline"></h2>
+                <p id="end-objective-recap"></p>
+                <div id="end-actions">
+                  <button id="end-play-again-btn" type="button">Play Again</button>
+                  <a id="end-new-game-link" href="/">New Game</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="edit-bar-wrap" hidden>
+          <div id="edit-bar">
+            <input id="edit-input" type="text" placeholder="Describe a change… e.g. make enemies faster" />
+            <button id="edit-btn" type="button">Apply Edit</button>
+          </div>
+          <div id="edit-status" hidden></div>
+          <button id="edit-retry-btn" type="button" hidden>Retry</button>
+        </div>
+      </div>
+      <aside id="history-sidebar">
+        <h2>Version History</h2>
+        <ul id="version-list"></ul>
+      </aside>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

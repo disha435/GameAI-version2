@@ -1,0 +1,53 @@
+{
+  "meta": { "title": "Rubble Run", "width": 640, "height": 480 },
+  "movementType": "topdown_8dir",
+  "theme": "dungeon",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#1d1d2b",
+    "bounds": { "width": 640, "height": 480 },
+    "groundTile": "tile_ground"
+  },
+  "player": {
+    "start": { "x": 320, "y": 400 },
+    "sprite": "player",
+    "health": 5,
+    "speed": 260,
+    "movementModifiers": {
+      "axisConstraint": "horizontal"
+    }
+  },
+  "entities": [
+    {
+      "id": "run_rules",
+      "type": "trigger",
+      "sprite": "trigger_zone",
+      "message": "Dodge left and right — you can't move up or down. Survive the rockfall!",
+      "behavior": "stationary",
+      "position": { "x": 320, "y": 80 },
+      "triggerType": "message",
+      "size": { "width": 560, "height": 100 }
+    },
+    { "id": "coin_1", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 80, "y": 400 }, "pickupType": "coin", "value": 10 },
+    { "id": "coin_2", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 560, "y": 400 }, "pickupType": "coin", "value": 10 }
+  ],
+  "spawners": [
+    {
+      "id": "rockfall",
+      "entityTemplate": {
+        "type": "enemy",
+        "sprite": "enemy_patrol",
+        "behavior": "fall_and_despawn",
+        "health": 2,
+        "damage": 1,
+        "scoreValue": 10
+      },
+      "interval": 1.1,
+      "spawnEdge": "top",
+      "moveDirection": "down",
+      "moveSpeed": 120
+    }
+  ],
+  "winCondition": { "type": "survive_duration", "threshold": 30 },
+  "hud": { "showHealth": true, "showScore": true, "showTimer": true }
+}

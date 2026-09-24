@@ -1,0 +1,59 @@
+{
+  "meta": { "title": "Flappy Pipes", "width": 480, "height": 640 },
+  "movementType": "shmup_freeaxis",
+  "camera": "follow_player",
+  "theme": "dungeon",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#12382f",
+    "bounds": { "width": 480, "height": 1200 },
+    "groundTile": "tile_ground"
+  },
+  "player": {
+    "start": { "x": 150, "y": 600 },
+    "sprite": "player",
+    "health": 1,
+    "speed": 200,
+    "movementModifiers": {
+      "axisConstraint": "vertical",
+      "gravity": { "enabled": true, "magnitude": 800 },
+      "inputMode": "impulse",
+      "impulseForce": 380
+    }
+  },
+  "entities": [
+    {
+      "id": "pipes_rules",
+      "type": "trigger",
+      "sprite": "trigger_zone",
+      "message": "Tap Up/W/Space to flap through the gaps in the incoming pipes!",
+      "behavior": "stationary",
+      "position": { "x": 150, "y": 600 },
+      "triggerType": "message",
+      "size": { "width": 400, "height": 200 }
+    }
+  ],
+  "spawners": [
+    {
+      "id": "incoming_pipes",
+      "entityTemplate": {
+        "type": "enemy",
+        "sprite": "enemy_patrol",
+        "behavior": "fall_and_despawn",
+        "damage": 1,
+        "size": { "width": 60, "height": 60 }
+      },
+      "interval": 1.8,
+      "spawnEdge": "right",
+      "moveDirection": "left",
+      "moveSpeed": 140,
+      "pairedGap": {
+        "gapSize": 220,
+        "gapPositionRange": { "min": 150, "max": 1050 },
+        "gapScoreValue": 10
+      }
+    }
+  ],
+  "winCondition": { "type": "survive_duration", "threshold": 45 },
+  "hud": { "showHealth": true, "showScore": true, "showTimer": true }
+}

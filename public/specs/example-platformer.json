@@ -1,0 +1,103 @@
+{
+  "meta": { "title": "Ledgeway Run", "width": 960, "height": 540 },
+  "movementType": "platformer_run_jump",
+  "theme": "dungeon",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#7ec8e3",
+    "bounds": { "width": 3200, "height": 720 },
+    "walls": [
+      { "x": 0, "y": 680, "width": 700, "height": 40 },
+      { "x": 860, "y": 680, "width": 640, "height": 40 },
+      { "x": 1650, "y": 680, "width": 650, "height": 40 },
+      { "x": 2450, "y": 680, "width": 750, "height": 40 },
+      { "x": 1000, "y": 480, "width": 220, "height": 32 },
+      { "x": 2000, "y": 450, "width": 220, "height": 32 }
+    ]
+  },
+  "player": {
+    "start": { "x": 60, "y": 560 },
+    "sprite": "player",
+    "health": 10,
+    "speed": 220,
+    "jumpVelocity": 420,
+    "attack": {
+      "type": "melee",
+      "damage": 2,
+      "range": 40,
+      "cooldown": 350
+    }
+  },
+  "entities": [
+    {
+      "id": "patrol_floor1",
+      "type": "enemy",
+      "sprite": "enemy_patrol",
+      "position": { "x": 300, "y": 664 },
+      "behavior": "patrol",
+      "behaviorParams": { "speed": 60, "patrolPoints": [{ "x": 150, "y": 664 }, { "x": 550, "y": 664 }] },
+      "health": 3,
+      "damage": 1,
+      "scoreValue": 15
+    },
+    {
+      "id": "patrol_platformA",
+      "type": "enemy",
+      "sprite": "enemy_patrol",
+      "position": { "x": 1050, "y": 464 },
+      "behavior": "patrol",
+      "behaviorParams": { "speed": 50, "patrolPoints": [{ "x": 1020, "y": 464 }, { "x": 1180, "y": 464 }] },
+      "health": 3,
+      "damage": 1,
+      "scoreValue": 15
+    },
+    {
+      "id": "bat_pit2",
+      "type": "enemy",
+      "sprite": "enemy_flyer",
+      "position": { "x": 1575, "y": 550 },
+      "behavior": "flying_sine",
+      "behaviorParams": { "speed": 60, "amplitude": 40, "frequency": 2, "patrolPoints": [{ "x": 1500, "y": 550 }, { "x": 1650, "y": 550 }] },
+      "health": 2,
+      "damage": 1,
+      "scoreValue": 10
+    },
+    {
+      "id": "patrol_floor3",
+      "type": "enemy",
+      "sprite": "enemy_patrol",
+      "position": { "x": 1900, "y": 664 },
+      "behavior": "patrol",
+      "behaviorParams": { "speed": 70, "patrolPoints": [{ "x": 1750, "y": 664 }, { "x": 2050, "y": 664 }] },
+      "health": 3,
+      "damage": 1,
+      "scoreValue": 15
+    },
+    { "id": "coin_1", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 450, "y": 664 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_2", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 1120, "y": 464 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_3", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 1720, "y": 664 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_4", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 2100, "y": 434 }, "pickupType": "coin", "value": 5 },
+    {
+      "id": "boss_end",
+      "type": "boss",
+      "sprite": "boss",
+      "position": { "x": 3050, "y": 664 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 300, "fireRate": 1400, "projectileSpeed": 200, "damage": 1 },
+      "health": 20,
+      "damage": 2,
+      "scoreValue": 200
+    },
+    {
+      "id": "win_flag",
+      "type": "trigger",
+      "sprite": "trigger_zone",
+      "position": { "x": 3150, "y": 640 },
+      "behavior": "stationary",
+      "triggerType": "win",
+      "size": { "width": 60, "height": 80 }
+    }
+  ],
+  "winCondition": { "type": "reach_trigger" },
+  "hud": { "showHealth": true, "showScore": true }
+}

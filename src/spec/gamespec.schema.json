@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gamespec.schema.json",
+  "title": "GameSpec",
+  "description": "Structural contract for a GD Runtime GameSpec. This is Gate 1 of validate.ts (schema conformance) — reference integrity against the live entity/behavior/asset/movement registries and gameplay invariants (win-condition reachability, bounds, non-negative stats) are checked separately in TypeScript because they need runtime registry data and cross-field logic a JSON Schema can't express.",
+  "type": "object",
+  "required": ["meta", "movementType", "theme", "world", "player", "entities", "winCondition"],
+  "additionalProperties": false,
+  "definitions": {
+    "vec2": {
+      "type": "object",
+      "required": ["x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "required": ["id", "type", "sprite", "position"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "enum": ["enemy", "pickup", "boss", "npc", "trigger"] },
+        "sprite": { "type": "string", "minLength": 1 },
+        "position": { "$ref": "#/definitions/vec2" },
+        "behavior": {
+          "type": "string",
+          "enum": ["patrol", "chase", "flee", "stationary", "flying_sine", "shooter", "melee", "fall_and_despawn"]
+        },
+        "behaviorParams": { "type": "object" },
+        "health": { "type": "number" },
+        "damage": { "type": "number" },
+        "scoreValue": { "type": "number" },
+        "pickupType": { "type": "string", "enum": ["coin", "health", "item", "key"] },
+        "value": { "type": "number" },
+        "triggerType": { "type": "string", "enum": ["win", "checkpoint", "message", "lose"] },
+        "size": {
+          "type": "object",
+          "required": ["width", "height"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "message": { "type": "string" }
+      }
+    },
+    "spawnerEntityTemplate": {
+      "type": "object",
+      "required": ["type", "sprite"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "type": "string", "enum": ["enemy", "boss"] },
+        "sprite": { "type": "string", "minLength": 1 },
+        "behavior": {
+          "type": "string",
+          "enum": ["patrol", "chase", "flee", "stationary", "flying_sine", "shooter", "melee", "fall_and_despawn"]
+        },
+        "behaviorParams": { "type": "object" },
+        "health": { "type": "number" },
+        "damage": { "type": "number" },
+        "scoreValue": { "type": "number" },
+        "size": {
+          "type": "object",
+          "required": ["width", "height"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      }
+    },
+    "spawner": {
+      "type": "object",
+      "required": ["id", "entityTemplate", "interval", "spawnEdge", "moveDirection", "moveSpeed"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "entityTemplate": { "$ref": "#/definitions/spawnerEntityTemplate" },
+        "interval": { "type": "number", "exclusiveMinimum": 0 },
+        "spawnEdge": { "type": "string", "enum": ["top", "bottom", "left", "right"] },
+        "moveDirection": { "type": "string", "enum": ["up", "down", "left", "right"] },
+        "moveSpeed": { "type": "number", "exclusiveMinimum": 0 },
+        "pairedGap": {
+          "type": "object",
+          "required": ["gapSize", "gapPositionRange"],
+          "additionalProperties": false,
+          "properties": {
+            "gapSize": { "type": "number", "exclusiveMinimum": 0 },
+            "gapPositionRange": {
+              "type": "object",
+              "required": ["min", "max"],
+              "additionalProperties": false,
+              "properties": {
+                "min": { "type": "number" },
+                "max": { "type": "number" }
+              }
+            },
+            "gapScoreValue": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["title", "width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "movementType": { "type": "string", "enum": ["topdown_8dir", "platformer_run_jump", "shmup_freeaxis"] },
+    "camera": { "type": "string", "enum": ["follow_player", "auto_scroll_vertical"] },
+    "theme": {
+      "type": "string",
+      "enum": ["dungeon", "space"],
+      "description": "Visual theme — governs entity sprite and tileset resolution (see ThemeRegistry). Required, not optional-with-a-default: the camera slice's lesson was that optional fields with a default are exactly what a model quietly stops reasoning about, and theme is more visually consequential than camera was."
+    },
+    "world": {
+      "type": "object",
+      "required": ["tileSize", "backgroundColor", "bounds"],
+      "additionalProperties": false,
+      "properties": {
+        "tileSize": { "type": "number", "exclusiveMinimum": 0 },
+        "backgroundColor": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" },
+        "bounds": {
+          "type": "object",
+          "required": ["width", "height"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "groundTile": { "type": "string" },
+        "walls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "additionalProperties": false,
+            "properties": {
+              "x": { "type": "number" },
+              "y": { "type": "number" },
+              "width": { "type": "number", "exclusiveMinimum": 0 },
+              "height": { "type": "number", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "player": {
+      "type": "object",
+      "required": ["start", "sprite", "health", "speed"],
+      "additionalProperties": false,
+      "properties": {
+        "start": { "$ref": "#/definitions/vec2" },
+        "sprite": { "type": "string", "minLength": 1 },
+        "health": { "type": "number" },
+        "speed": { "type": "number" },
+        "jumpVelocity": { "type": "number", "exclusiveMinimum": 0 },
+        "attack": {
+          "type": "object",
+          "required": ["type", "damage", "range", "cooldown"],
+          "additionalProperties": false,
+          "properties": {
+            "type": { "type": "string", "enum": ["melee", "ranged", "none"] },
+            "damage": { "type": "number" },
+            "range": { "type": "number" },
+            "cooldown": { "type": "number" },
+            "projectileSpeed": { "type": "number" },
+            "projectileSprite": { "type": "string" }
+          }
+        },
+        "movementModifiers": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "axisConstraint": { "type": "string", "enum": ["none", "horizontal", "vertical"] },
+            "gravity": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["enabled"],
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "magnitude": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            },
+            "inputMode": { "type": "string", "enum": ["continuous", "impulse"] },
+            "impulseForce": { "type": "number", "exclusiveMinimum": 0 },
+            "gridSnap": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["cellSize"],
+              "properties": {
+                "cellSize": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "entities": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/entity" }
+    },
+    "spawners": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/spawner" }
+    },
+    "winCondition": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["defeat_boss", "defeat_all_enemies", "collect_all_pickups", "reach_trigger", "score_threshold", "survive_duration"]
+        },
+        "targetId": { "type": "string" },
+        "threshold": { "type": "number" }
+      }
+    },
+    "hud": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "showHealth": { "type": "boolean" },
+        "showScore": { "type": "boolean" },
+        "showInventory": { "type": "boolean" },
+        "showTimer": { "type": "boolean" }
+      }
+    }
+  }
+}

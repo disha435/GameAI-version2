@@ -1,0 +1,3 @@
+ALTER TABLE "game_versions" ADD COLUMN "edit_source" text;--> statement-breakpoint
+ALTER TABLE "game_versions" ADD CONSTRAINT "game_versions_edit_source_check" CHECK ("game_versions"."edit_source" IS NULL OR "game_versions"."edit_source" IN ('deterministic', 'llm_patch'));--> statement-breakpoint
+ALTER TABLE "game_versions" ADD CONSTRAINT "game_versions_edit_source_scope_check" CHECK ("game_versions"."edit_source" IS NULL OR "game_versions"."source" = 'edit');

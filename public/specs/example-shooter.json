@@ -1,0 +1,123 @@
+{
+  "meta": { "title": "Starfall Gauntlet", "width": 480, "height": 720 },
+  "movementType": "shmup_freeaxis",
+  "camera": "auto_scroll_vertical",
+  "theme": "space",
+  "world": {
+    "tileSize": 32,
+    "backgroundColor": "#05060f",
+    "bounds": { "width": 480, "height": 3200 },
+    "groundTile": "tile_space"
+  },
+  "player": {
+    "start": { "x": 240, "y": 100 },
+    "sprite": "player_ship",
+    "health": 100,
+    "speed": 220,
+    "attack": {
+      "type": "ranged",
+      "damage": 8,
+      "range": 300,
+      "cooldown": 250,
+      "projectileSpeed": 400,
+      "projectileSprite": "projectile"
+    }
+  },
+  "entities": [
+    {
+      "id": "enemy_a_1",
+      "type": "enemy",
+      "sprite": "enemy_ship_a",
+      "position": { "x": 120, "y": 320 },
+      "behavior": "flying_sine",
+      "behaviorParams": {
+        "speed": 50,
+        "amplitude": 60,
+        "frequency": 1.8,
+        "patrolPoints": [
+          { "x": 60, "y": 320 },
+          { "x": 300, "y": 320 }
+        ]
+      },
+      "health": 20,
+      "damage": 5,
+      "scoreValue": 15
+    },
+    {
+      "id": "enemy_b_1",
+      "type": "enemy",
+      "sprite": "enemy_ship_b",
+      "position": { "x": 360, "y": 700 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 350, "fireRate": 1300, "projectileSpeed": 260, "damage": 8 },
+      "health": 30,
+      "damage": 0,
+      "scoreValue": 25
+    },
+    {
+      "id": "enemy_a_2",
+      "type": "enemy",
+      "sprite": "enemy_ship_a",
+      "position": { "x": 300, "y": 1150 },
+      "behavior": "flying_sine",
+      "behaviorParams": {
+        "speed": 55,
+        "amplitude": 60,
+        "frequency": 2,
+        "patrolPoints": [
+          { "x": 200, "y": 1150 },
+          { "x": 420, "y": 1150 }
+        ]
+      },
+      "health": 20,
+      "damage": 5,
+      "scoreValue": 15
+    },
+    {
+      "id": "enemy_b_2",
+      "type": "enemy",
+      "sprite": "enemy_ship_b",
+      "position": { "x": 140, "y": 1600 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 350, "fireRate": 1300, "projectileSpeed": 260, "damage": 8 },
+      "health": 30,
+      "damage": 0,
+      "scoreValue": 25
+    },
+    {
+      "id": "enemy_a_3",
+      "type": "enemy",
+      "sprite": "enemy_ship_a",
+      "position": { "x": 250, "y": 2050 },
+      "behavior": "flying_sine",
+      "behaviorParams": {
+        "speed": 55,
+        "amplitude": 60,
+        "frequency": 1.8,
+        "patrolPoints": [
+          { "x": 100, "y": 2050 },
+          { "x": 400, "y": 2050 }
+        ]
+      },
+      "health": 20,
+      "damage": 5,
+      "scoreValue": 15
+    },
+    {
+      "id": "enemy_b_3",
+      "type": "enemy",
+      "sprite": "enemy_ship_b",
+      "position": { "x": 380, "y": 2450 },
+      "behavior": "shooter",
+      "behaviorParams": { "range": 350, "fireRate": 1300, "projectileSpeed": 260, "damage": 8 },
+      "health": 30,
+      "damage": 0,
+      "scoreValue": 25
+    },
+    { "id": "coin_1", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 200, "y": 500 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_2", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 350, "y": 1350 }, "pickupType": "coin", "value": 5 },
+    { "id": "coin_3", "type": "pickup", "sprite": "pickup_coin", "position": { "x": 150, "y": 2200 }, "pickupType": "coin", "value": 5 }
+  ],
+  "winCondition": { "type": "survive_duration", "threshold": 45 },
+  "hud": { "showHealth": true, "showScore": true, "showInventory": false, "showTimer": true }
+}
